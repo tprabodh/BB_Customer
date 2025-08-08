@@ -1,0 +1,45 @@
+buildscript {
+    ext.kotlin_version = '1.9.0'
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+        // ↓ Add this flutter map so plugins can see flutter.compileSdkVersion, etc.
+                ext.flutter = [
+                  compileSdkVersion: 35,
+                  minSdkVersion    : 23,
+                  targetSdkVersion : 35
+                ]
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = "../build"
+
+// This simplified block is more robust for configuring all sub-modules.
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            android {
+                                compileSdkVersion flutter.compileSdkVersion
+                            }
+        }
+    }
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
