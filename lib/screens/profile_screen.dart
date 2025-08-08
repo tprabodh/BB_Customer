@@ -40,12 +40,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _updateProfile() async {
     if (_formKey.currentState!.validate()) {
+      String newPhoneNumber = _phoneController.text.trim();
+
+      // Phone number length validation is already handled by the TextFormField validator
+
       try {
         User? user = FirebaseAuth.instance.currentUser;
         if (user != null) {
+          // Phone number uniqueness validation
+          QuerySnapshot phoneQuery = await FirebaseFirestore.instance
+              .collection('customers')
+              .where('phone', isEqualTo: newPhoneNumber)
+              .get();
+
+          if (phoneQuery.docs.isNotEmpty && phoneQuery.docs.first.id != user.uid) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('This contact number is already in use by another customer.')),
+            );
+            return;
+          }
+
           await FirebaseFirestore.instance.collection('customers').doc(user.uid).update({
             'name': _nameController.text,
-            'phone': _phoneController.text,
+            'phone': newPhoneNumber,
             'address': _addressController.text,
             'landmark': _landmarkController.text,
           });

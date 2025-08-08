@@ -69,6 +69,22 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         return;
       }
 
+      String newPhoneNumber = _phoneController.text.trim();
+
+      // Phone number uniqueness validation
+      QuerySnapshot phoneQuery = await FirebaseFirestore.instance
+          .collection('customers')
+          .where('phone', isEqualTo: newPhoneNumber)
+          .get();
+
+      if (phoneQuery.docs.isNotEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('This contact number is already registered.')),
+        );
+        return;
+      }
+
       try {
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: _emailController.text,
