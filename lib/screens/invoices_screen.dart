@@ -61,8 +61,9 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     final ttf = pw.Font.ttf(fontData);
 
     var invoiceData = invoiceDoc.data() as Map<String, dynamic>;
-    String vendorBusinessName = "Yasaswy Universal";
+    String vendorBusinessName = "Oxysmart Private Limited";
     String vendorBusinessAddress = "324, 8th cross road, MCECHS Layout, 560077, Bengaluru";
+    String gstin = "29AADCJ7541F1ZG";
 
     List<dynamic> invoiceItems = invoiceData['invoiceItems'] ?? [];
     Timestamp timestamp = invoiceData['timestamp'] ?? Timestamp.now();
@@ -71,6 +72,10 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     for (var item in invoiceItems) {
       grandTotal += (item['sellingPrice'] ?? 0.0) * (item['quantity'] ?? 0);
     }
+
+    double gstAmount = grandTotal - (grandTotal / 1.05);
+    double subTotal = grandTotal / 1.05;
+
 
     pdf.addPage(
       pw.Page(
@@ -89,6 +94,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 child: pw.Column(
                   children: [
                     pw.Text(vendorBusinessAddress, style: pw.TextStyle(font: ttf)),
+                    pw.Text('GSTIN: $gstin', style: pw.TextStyle(font: ttf)),
                   ],
                 ),
               ),
@@ -111,14 +117,20 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               ),
               pw.SizedBox(height: 20),
               pw.Table.fromTextArray(
-                headers: ['Item', 'Qty', 'MRP', 'Selling Price', 'Total'],
-                data: invoiceItems.map((item) => [
-                  item['itemName'],
-                  item['quantity'].toString(),
-                  'Rs.${(item['mrp'] ?? 0.0).toStringAsFixed(2)}',
-                  'Rs.${(item['sellingPrice'] ?? 0.0).toStringAsFixed(2)}',
-                  'Rs.${((item['sellingPrice'] ?? 0.0) * (item['quantity'] ?? 0)).toStringAsFixed(2)}',
-                ]).toList(),
+                headers: ['Item', 'Qty', 'MRP', 'Selling Price (excl. GST)', 'Total (excl. GST)'],
+                data: invoiceItems.map((item) {
+                  double sellingPrice = item['sellingPrice'] ?? 0.0;
+                  int quantity = item['quantity'] ?? 0;
+                  double exclusiveSellingPrice = sellingPrice / 1.05;
+                  double exclusiveTotal = exclusiveSellingPrice * quantity;
+                  return [
+                    item['itemName'],
+                    quantity.toString(),
+                    'Rs.${(item['mrp'] ?? 0.0).toStringAsFixed(2)}',
+                    'Rs.${exclusiveSellingPrice.toStringAsFixed(2)}',
+                    'Rs.${exclusiveTotal.toStringAsFixed(2)}',
+                  ];
+                }).toList(),
                 border: pw.TableBorder.all(),
                 headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf),
                 cellAlignment: pw.Alignment.centerRight,
@@ -131,6 +143,8 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
                 child: pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
                   children: [
+                    pw.Text('Subtotal: Rs.${subTotal.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf)),
+                    pw.Text('GST (5%): Rs.${gstAmount.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf)),
                     pw.Text('Grand Total: Rs.${grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, font: ttf)),
                   ],
                 ),
@@ -149,7 +163,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => Scaffold(
-          appBar: AppBar(title: const Text('Invoice Preview'), backgroundColor: Theme.of(context).primaryColor),
+          appBar: AppBar(
+            title: const Text('Invoice Preview', style: TextStyle(color: Colors.white)),
+            backgroundColor: Theme.of(context).primaryColor,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
           body: PdfPreview(
             build: (format) => _generatePdf(invoiceDoc),
             allowPrinting: true,

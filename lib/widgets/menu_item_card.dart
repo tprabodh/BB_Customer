@@ -179,7 +179,7 @@ class _MenuItemCardState extends State<MenuItemCard> {
                   )
                 : Expanded(
                     child: Text(
-                      'Item is being refilled',
+                      'Available on Demand',
                       style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.end,
                     ),

@@ -83,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         titleSpacing: 0.0, // Remove default spacing
         title: const Text(
-          'Home',
+          '',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -118,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Bike Executives Near Me',
+              '',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
@@ -160,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (isWorking) {
                               GeoPoint vendorLocation = doc['location'];
                               double distance = _calculateDistance(vendorLocation);
-                              if (distance <= 1000000) {
+                              if (distance <= 10) { // Changed to 10km
                                 nearbyVendors.add(doc);
                               }
                             }
@@ -171,81 +171,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
                         if (nearbyVendors.isEmpty) {
                           return Center(
-                            child: Text(
-                              'Currently there are no active vendors in the area, please try again after some time.',
-                              style: TextStyle(fontSize: 18, color: Colors.grey),
-                              textAlign: TextAlign.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'There are no vendors currently. Please check again at a later time.',
+                                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 20),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    setState(() {
+                                      _getCurrentLocation();
+                                    });
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Reload'),
+                                ),
+                              ],
                             ),
                           );
-                        } else if (nearbyVendors.length == 1) {
-                          var singleVendor = nearbyVendors.first;
-                          GeoPoint vendorLocation = singleVendor['location'];
-                          double distance = _calculateDistance(vendorLocation);
+                        } else {
+                          // Find the nearest vendor
+                          DocumentSnapshot nearestVendor = nearbyVendors.first;
+                          double minDistance = _calculateDistance(nearestVendor['location']);
+
+                          for (var vendor in nearbyVendors) {
+                            double distance = _calculateDistance(vendor['location']);
+                            if (distance < minDistance) {
+                              minDistance = distance;
+                              nearestVendor = vendor;
+                            }
+                          }
+                          
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => VendorDetailScreen(
-                                  vendorId: singleVendor.id,
-                                  distance: distance,
+                                  vendorId: nearestVendor.id,
+                                  distance: minDistance,
                                 ),
                               ),
                             );
                           });
                           return Center(child: CircularProgressIndicator()); // Show loading while navigating
-                        } else { // This else block handles nearbyVendors.length > 1
-                          return ListView.builder(
-                            itemCount: nearbyVendors.length,
-                            itemBuilder: (context, index) {
-                              var vendor = nearbyVendors[index];
-                              String vendorName = vendor['name'] ?? 'Unknown Vendor';
-                              GeoPoint vendorLocation = vendor['location'];
-                              double distance = _calculateDistance(vendorLocation);
-
-                              return Card(
-                                elevation: 4.0,
-                                margin: EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 8.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                                child: Container(
-                                  color: Colors.white,
-                                  child: ListTile(
-                                    contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 20.0, vertical: 10.0),
-                                    leading: Icon(Icons.person,
-                                        color: Theme.of(context).primaryColorDark),
-                                    title: Text(
-                                      vendorName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).primaryColorDark,
-                                      ),
-                                    ),
-                                    subtitle: Padding(
-                                      padding: const EdgeInsets.only(top: 4.0),
-                                      child: Text(
-                                        'Distance: ${distance.toStringAsFixed(2)} km',
-                                        style: TextStyle(color: Colors.black54),
-                                      ),
-                                    ),
-                                    trailing: Icon(Icons.arrow_forward_ios,
-                                        color: Theme.of(context).primaryColor, size: 16.0),
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              VendorDetailScreen(vendorId: vendor.id, distance: distance),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              );
-                            },
-                          );
                         }
                       },
                     ),

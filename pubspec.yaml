@@ -23,6 +23,7 @@ dependencies:
   file_saver: ^0.2.12
   google_fonts: ^6.2.1
   url_launcher: ^6.2.2
+  connectivity_plus: ^6.0.3
 
 dev_dependencies:
   flutter_test:

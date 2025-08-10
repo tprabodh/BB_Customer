@@ -1,3 +1,4 @@
+import 'package:customer_app/screens/initial_checks_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -104,7 +105,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Registration Successful!')),
         );
-        Navigator.pop(context); // Go back to login screen
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => InitialChecksScreen()),
+          (Route<dynamic> route) => false,
+        );
       } on FirebaseAuthException catch (e) {
         String message;
         if (e.code == 'weak-password') {

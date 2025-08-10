@@ -8,6 +8,8 @@ import 'package:geodesy/geodesy.dart';
 import 'package:customer_app/widgets/menu_item_card.dart';
 import 'package:customer_app/screens/profile_screen.dart';
 import 'package:customer_app/screens/invoices_screen.dart';
+import 'package:customer_app/screens/home_screen.dart';
+
 
 class VendorDetailScreen extends StatefulWidget {
   final String vendorId;
@@ -292,13 +294,23 @@ class _VendorDetailScreenState extends State<VendorDetailScreen> {
           'Bike Executive Details',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 24,
+            fontSize: 22,
             color: Colors.white,
           ),
         ),
         backgroundColor: Theme.of(context).primaryColor,
         elevation: 5.0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => HomeScreen()),
+                (Route<dynamic> route) => false,
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.person, color: Colors.white),
             onPressed: () {
